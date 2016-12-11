@@ -9,7 +9,7 @@ password="w205.Awesome", host = "34.193.7.196", port="5432")
     
 cur = conn.cursor()
 
-cur.execute('''CREATE TABLE IF NOT EXISTS mentee_behavior
+cur.execute('''CREATE TABLE IF NOT EXISTS mentee_behavior_2
 	(mentee_persona_id INT,
 	pair_id INT,
 	mentee_user_id INT,
@@ -26,7 +26,7 @@ cur.execute('''CREATE TABLE IF NOT EXISTS mentee_behavior
 	convo_word_cnt INT);''')
 conn.commit()
 	
-sqlstr = "COPY mentee_behavior FROM STDIN DELIMITER ',' CSV"
+sqlstr = "COPY mentee_behavior_2 FROM STDIN DELIMITER ',' CSV"
 with open('/Users/nwchen24/Desktop/UC_Berkeley/Storing_and_Retrieving_Data/Final Project/Data from iMentor/2016-11-01 Message Traffic/mentee_platform_behavior11216_forload.csv') as f:
     cur.copy_expert(sqlstr, f)
 conn.commit()
