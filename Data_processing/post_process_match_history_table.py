@@ -1,6 +1,6 @@
 #/usr/bin/env python3
 
-# Program to do some processing of the match_history table (result = match_history_process
+# Program to do some processing of the match_history table (result = match_history_process)
 
 import psycopg2
 
@@ -27,6 +27,15 @@ conn.commit
 cur.execute('''UPDATE match_history_process SET dropout=0 WHERE match_closure_reason_super IS NULL;''')
 conn.commit	
 
+cur.execute('''ALTER TABLE match_history_process ADD formal_close int;''')
+conn.commit
+
+cur.execute('''UPDATE match_history_process SET formal_close=1 WHERE match_closure_reason_super='Formal closure';''')
+conn.commit
+
+cur.execute('''UPDATE match_history_process SET formal_close=0 WHERE match_closure_reason_super!='Formal closure';''')
+conn.commit
+
 cur.execute('''ALTER TABLE match_history_process ADD match_days int;''')
 conn.commit
 
@@ -43,7 +52,7 @@ cur.execute('''UPDATE match_history_process SET start_year=date_part('year',matc
 conn.commit
 
 cur.execute('''UPDATE match_history_process SET end_year=date_part('year',match_end_date;''')
-conn.commit
+conn.commit()
 	
 conn.close()
 
