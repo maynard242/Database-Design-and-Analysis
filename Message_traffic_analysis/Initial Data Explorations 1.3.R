@@ -11,41 +11,35 @@ library(openxlsx)
 #Load data
 #***********************************************
 
+library(RPostgreSQL)
+
+#Define driver
+pg <- dbDriver("PostgreSQL")
+
+#Define Connection
+conn <- dbConnect(pg, user="awesome_admin", password="w205.Awesome", host="34.193.7.196", port=5432, dbname="awesome")
+
 #*****************
-#Match History
-setwd('~/Desktop/UC_Berkeley/Storing_and_Retrieving_Data/Final Project/Data from iMentor/2016-10-26_Match History/')
-getwd()
-
-#load data
-match.history <- read.csv("match_history102616.csv", header = TRUE)
-
-#Create combined dropout flag
-match.history %>% mutate_if(is.factor, as.character) -> match.history
-match.history$combined.dropout.flag <- ifelse(match.history$match_closure_reason_control == "Match Open", "Match Open", match.history$match_closure_reason_super)
+#Match history
+match.history <- dbGetQuery(conn, "select * from match_history")
 
 
 #*****************
 #Match pairs
-setwd('~/Desktop/UC_Berkeley/Storing_and_Retrieving_Data/Final Project/Data from iMentor/2016-10-26_Master Mentor Mentee Pairs/')
-getwd()
-
-#Load data
-match.pairs <- read.xlsx("Master_EoYR_File_201516 JIM.xlsx")
-
+match.pairs <- dbGetQuery(conn, "select * from master_table")
 
 #*****************
 #Message Traffic
-setwd('~/Desktop/UC_Berkeley/Storing_and_Retrieving_Data/Final Project/Data from iMentor/2016-11-01 Message Traffic/')
-getwd()
-
-message.traffic.mentors <- read.csv("mentor_platform_behavior11216_corrected.csv", header = TRUE, colClasses = c("integer", "integer", "integer", "integer", "factor", "character", "character", "character", "character", "character", "character", "integer", "integer", "integer"))
-message.traffic.mentees <- read.csv("mentee_platform_behavior11216.csv", header = TRUE, colClasses = c("integer", "integer", "integer", "integer", "factor", "character", "character", "character", "character", "character", "character", "integer", "integer", "integer"))
-
+message.traffic.mentors <- dbGetQuery(conn, "select * from mentor_behavior_2")
+message.traffic.mentees <- dbGetQuery(conn, "select * from mentee_behavior_2")
 
 #**********************************
 #Prep data
 #**********************************
 
+#Create combined dropout flag in match history dataframe
+match.history %>% mutate_if(is.factor, as.character) -> match.history
+match.history$combined.dropout.flag <- ifelse(match.history$match_closure_reason_control == "Match Open", "Match Open", match.history$match_closure_reason_super)
 
 #*****************
 #Message traffic is from 2015 - 2016, so remove mentors that were not flagged as active at the bginning of the 15/16 school year.
@@ -66,21 +60,8 @@ message.traffic.mentors <- merge(message.traffic.mentors, match.history[,c("pair
 message.traffic.mentees <- merge(message.traffic.mentees, match.history[,c("pair_id", "combined.dropout.flag")], by.x = "pair_id", by.y = "pair_id")
 
 #********************
-#convert submission and begin to date and calculate writing time
-message.traffic.mentors$user_first_sub <- as.POSIXct(strptime(message.traffic.mentors$user_first_sub, "%m/%d/%y %H:%M", tz = ""), tz = "GMT")
-message.traffic.mentors$user_begin <- as.POSIXct(strptime(message.traffic.mentors$user_begin, "%m/%d/%y %H:%M", tz = ""), tz = "GMT")
-
-message.traffic.mentees$user_first_sub <- as.POSIXct(strptime(message.traffic.mentees$user_first_sub, "%m/%d/%y %H:%M", tz = ""), tz = "GMT")
-message.traffic.mentees$user_begin <- as.POSIXct(strptime(message.traffic.mentees$user_begin, "%m/%d/%y %H:%M", tz = ""), tz = "GMT")
-
-message.traffic.mentors$lesson_launch <- as.POSIXct(strptime(message.traffic.mentors$lesson_launch, "%m/%d/%y %H:%M", tz = ""), tz = "GMT")
-message.traffic.mentors$lesson_close <- as.POSIXct(strptime(message.traffic.mentors$lesson_close, "%m/%d/%y %H:%M", tz = ""), tz = "GMT")
-
-message.traffic.mentees$lesson_launch <- as.POSIXct(strptime(message.traffic.mentees$lesson_launch, "%m/%d/%y %H:%M", tz = ""), tz = "GMT")
-message.traffic.mentees$lesson_close <- as.POSIXct(strptime(message.traffic.mentees$lesson_close, "%m/%d/%y %H:%M", tz = ""), tz = "GMT")
-
-message.traffic.mentors$match_end_date <- as.POSIXct(strptime(message.traffic.mentors$match_end_date, "%m/%d/%Y", tz = ""), tz = "GMT")
-
+#convert end date
+message.traffic.mentors$match_end_date_converted <- as.POSIXct(strptime(message.traffic.mentors$match_end_date, "%Y-%m-%d", tz = ""), tz = "GMT")
 
 #total writing time
 message.traffic.mentors$total.writing.time <- as.numeric(difftime(message.traffic.mentors$user_first_sub, message.traffic.mentors$user_begin, units = c("mins")))
