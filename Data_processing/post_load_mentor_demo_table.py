@@ -27,7 +27,7 @@ cur.execute('''CREATE TABLE IF NOT EXISTS mentor_demo
 	Partner_Site TEXT,
 	School_cohort_id INT,
 	program_type TEXT,
-	Mailing_Zip_PostalCode INT,
+	Mailing_Zip_PostalCode TEXT,
 	Language_other_than_English TEXT,
 	Parent_Guardian_College_Degree TEXT,
 	College_Majors TEXT,

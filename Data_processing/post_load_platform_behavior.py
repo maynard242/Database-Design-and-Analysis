@@ -9,7 +9,7 @@ password="w205.Awesome", host = "34.193.7.196", port="5432")
     
 cur = conn.cursor()
 
-cur.execute('''CREATE TABLE IF NOT EXISTS mentor_behavior
+cur.execute('''CREATE TABLE IF NOT EXISTS platform_behavior
 	(mentor_persona_id INT,
 	pair_id INT,
 	mentor_user_id INT,
@@ -19,7 +19,7 @@ cur.execute('''CREATE TABLE IF NOT EXISTS mentor_behavior
 	lesson_close TIMESTAMP,
 	user_begin INTERVAL,
 	user_first_sub INTERVAL,
-	time_on_canvas_sub_1 INTERVAL,
+	time_on_canvas_sub_1 TEXT,
 	user_most_recent_sub INTERVAL,
 	canvas_word_cnt INT,
 	convo_count INT,
