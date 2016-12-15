@@ -1,0 +1,55 @@
+##MESSAGE TRAFFIC ANALYSIS##
+
+##STEP-BY-STEP INSTRUCTIONS ON HOW TO RUN THE ANALYSIS##
+
+
+USAGE:
+Message traffic analysis uses R to analyze the mentor and mentee platform behavior data provided by iMentor. These analyses also rely on the match history and master files received from iMentor.
+
+
+Datasets relied upon:
+mentor_platform_behavior11216_corrected.csv
+mentee_platform_behavior11216.csv
+match_history102616.csv
+Master_EoYR_File_201516 Jim.xlsx
+
+
+STEP 1 - Environment and Tool Setup
+
+
+1. Program: Initial Data Explorations 1.3.R
+This program is written in R. Version 3.3.1 was used.
+
+
+Package dependencies:
+dplyr
+ggplot2
+RPostgreSQL
+
+
+R can be downloaded for free here
+https://www.r-project.org/
+
+
+Install packages above using the command
+install.packages(c(“dplyr”, “ggplot2”, “RPostgreSQL”))
+
+
+STEP 2 - Application setup
+1. Pull the R script above from the Git Hub repository:
+https://github.com/nwchen24/W205ProjectAwesome/tree/master/Message_traffic_analysis
+
+
+2. Open R or R studio
+
+
+3. Open the R script in R or R studio
+
+
+4. Run the R script step by step
+
+
+The datasets specified above have been loaded into our Postgres database hosted on Amazon. The code ‘Initial Data Explorations 1.3.R’ first loads these data from our Postgres database. All necessary user and password information to access the database are included in the R code. The code then preps each dataset, creating and transforming variables as required for the analysis to follow. Finally, we analyze patterns in the message traffic to compare mentors who drop out against mentors whose engagement with iMentor ends due to formal closure, mentee dropout, and mentors who are still part of active matches.
+
+
+One of the central methodologies applied repeatedly in this code to different metrics is to calculate the mean and standard deviation of a certain metric, say word count or response time for each mentor then standardize each observation to a z score. We then index messages on a linear scale indexed to the last message observation sent by each mentor. This allows us to look at the last message observation across mentors, the second to last, third to last, etc allowing us to look  for patterns leading up to the end of a mentor’s engagement with iMentor across all mentors. We take the average of these z scores for all mentors within a certain group for each indexed message sequence and plot the results to view time trends. In the plots created by our code, zero on the far right of the X-axis represents the last message sent by a mentor while the negative numbers moving to the left represent messages moving back in time from the last message observed in the data.

@@ -1,14 +1,23 @@
-#Name: Data exploration for iMentor project.
-#Date: October 29, 2016
-#Author: Nick Chen
+---
+title: "iMentor Message Traffic Analysis"
+author: "Nick Chen"
+date: "December 14, 2016"
+output: pdf_document
+classoption: landscape
+---
 
+# I. Introduction and Motivation
+The purpose of this analysis is to examine patterns observed in the platform behavior. datasets provided to us by iMentor with the goal of determining first whether there are any distinguishing patterns that could be used to predict dropout and second whether mentors who drop out of the program behave in an appreciably different manner than mentors who do not drop out.
+
+# II. Summary of Results
+We find that dropout mentors do not seem to behave in an appreciably different manner as observed from platform behavior datasets provided by iMentor. Across a variety of metrics including mentor response time, mentor word count, and mentor ignore rates, we see a definitive time trend indicating decreasing mentor engagement over time.
+
+```{r, tidy=TRUE}
 library(dplyr)
 library(ggplot2)
 library(xlsx)
 library(openxlsx)
 
-
-install.packages("RPostgreSQL", lib = "/Users/nwchen24/anaconda/lib/R/library/")
 
 #***********************************************
 #Load data
@@ -130,18 +139,14 @@ message.traffic.mentees <- message.traffic.mentees[,!names(message.traffic.mente
 
 message.traffic.mentors.content <- message.traffic.mentors.content[,!names(message.traffic.mentors.content) %in% c("max.lesson.rank", "mentor.mean.wordcount", "mentor.sd.wordcount", "mentor.mean.writing.time", "mentor.sd.writing.time")]
 message.traffic.mentees.content <- message.traffic.mentees.content[,!names(message.traffic.mentees.content) %in% c("max.lesson.rank", "mentee.mean.wordcount", "mentee.sd.wordcount", "mentee.mean.writing.time", "mentee.sd.writing.time")]
+```
 
 
+#III. Mentor and Mentee Separate Message Traffic Analysis
 
-#**************************************
-#Message Traffic Analysis Before Merging Mentor and Mentee
-#**************************************
+## a.Writing time
 
-
-
-#*********************
-#Writing time
-
+```{r, tidy=TRUE}
 #Summary
 summary(message.traffic.mentors.content$total.writing.time)
 summary(message.traffic.mentees.content$total.writing.time)
@@ -212,22 +217,20 @@ legend(inset = c(.1, .1), "topright", legend=leg.txt, lty=c(1,1,1,1),
 par(new = TRUE)
 plot(x = writingtime.by.message.seq$x.for.line.chart, writingtime.by.message.seq$`mean.mentor.zscore.writing.time.Formal closure`,
      main = "", xlab = "", ylab = "", type = "l", col = "navy", xlim = c(-33, 1), ylim = c(-.5, 1.5), axes = FALSE)
+```
 
-#Comment on writing time
-#The analysis of writing time may show a slight decline in writing time as mentors are in the program for a longer amount of time.
-#There are too many outliers that are driving group means and creating huge variance to see significant differences among groups.
-#Plotting a histogram of writing time grouped by dropout group shows no clear distinction of writing time among dropout groups.
+###Comment on writing time
+
+The analysis of writing time may show a slight decline in writing time as mentors are in the program for a longer amount of time. There are too many outliers that are driving group means and creating huge variance to see significant differences among groups. Plotting a histogram of writing time grouped by dropout group shows no clear distinction of writing time among dropout groups.
 
 
-#*********************
-#Message length
+## b. Message length
 
+```{r, tidy=TRUE}
 #summarize word count
 summary(message.traffic.mentors$canvas_word_cnt)
 summary(message.traffic.mentees$canvas_word_cnt)
 
-#test whether difference in mean message length is statistically significantly different for mentors and mentees
-t.test(message.traffic.mentors[!is.na(message.traffic.mentors$canvas_word_cnt),c("canvas_word_cnt")], message.traffic.mentees[!is.na(message.traffic.mentees$canvas_word_cnt),c("canvas_word_cnt")], paired = FALSE)
 
 #look at message word count by group
 message.word.count.by.group.summ <- message.traffic.mentors.content %>% group_by(combined.dropout.flag) %>% summarise(mean.word.count.mentor = mean(canvas_word_cnt), count.obs = n())
@@ -324,16 +327,16 @@ legend(inset = c(.1, .1), "topright", legend=leg.txt, lty=c(1,1,1,1),
 par(new = TRUE)
 plot(x = wordcount.by.message.seq.w.zeroes$x.for.line.chart, wordcount.by.message.seq.w.zeroes$`mean.mentor.zscore.wordcount.w.zeroes.Formal closure`,
      main = "", xlab = "", ylab = "", type = "l", col = "navy", xlim = c(-33, 1), ylim = c(-1, 1), axes = FALSE)
+```
+
+####Comment on message length
+
+Again, no apparent distinction between dropout groups in either raw word count or pattern of wordcount over time. When only looking at messages that include any content, there doesn't appear to be any significant time trend of message length as mentors are in the program for a longer period of time. When we include messages with no content, however, there is quite a distinct downward trend in message length as mentors are in the program for a longer period of time, signaling declining mentor engagement over time.
 
 
+## c. Blank messages
 
-#Comment on message length
-#Again, no apparent distinction between dropout groups in either raw word count or pattern of wordcount over time.
-#When only looking at messages that include any content, there doesn't appear to be any significant time trend of message length as mentors are in the program for a longer period of time.
-#When we include messages with no content, however, there is quite a distinct downward trend in message length as mentors are in the program for a longer period of time.
-
-#*******************
-#Blank messages
+```{r, tidy=TRUE}
 #count messages with no content
 sum(is.na(message.traffic.mentors$canvas_word_cnt))/nrow(message.traffic.mentors)
 sum(is.na(message.traffic.mentees$canvas_word_cnt))/nrow(message.traffic.mentees)
@@ -342,6 +345,9 @@ summary(message.traffic.mentors$canvas_word_cnt)
 
 #get share of blank messages by dropout group
 blank.message.share.by.group.summ <- message.traffic.mentors %>% group_by(combined.dropout.flag) %>% summarise(share.of.blank.messages = mean(blank.message.flag), count.obs = n())
+
+blank.message.share.by.group.summ
+
 tt = pairwise.t.test(message.traffic.mentors$blank.message.flag, message.traffic.mentors$combined.dropout.flag, p.adjust.method = "bonferroni", na.rm = TRUE)
 tt
 #strangely formal closures seem to have a statistically significantly higher prevalence of blank messages.
@@ -386,22 +392,20 @@ legend(inset = c(.1, .7), "topright", legend=leg.txt, lty=c(1,1,1,1),
 par(new = TRUE)
 plot(x = blank.message.pct.by.message.seq$x.for.line.chart, blank.message.pct.by.message.seq$`blank.message.pct.Formal closure`,
      main = "", xlab = "", ylab = "", type = "l", col = "navy", xlim = c(-33, 1), ylim = c(0, 1), axes = FALSE)
+```
 
-#Comment on blank messages
-#In mentor message traffic limited to mentors that appear in the match history file and who were flagged as active at the beginning of the 15/16 school year, there is an extremely high prevalenceof blank messages (>40%).
-#Graphing the prevalence of blank messages over time shows an increasing prevalence of blank messages over time across all groups.
-#Note have removed a few early observations with less than five observations that showed 100% blank messages.
+###Comment on blank messages
 
-
+In mentor message traffic limited to mentors that appear in the match history file and who were flagged as active at the beginning of the 15/16 school year, there is an extremely high prevalenceof blank messages (>40%). Graphing the prevalence of blank messages over time shows an increasing prevalence of blank messages over time across all groups, indicating declining mentor engagement over time. Note have removed a few early observations with less than five observations that showed 100% blank messages.
 
 
-#**************************************
-#Merged mentor and mentee message traffic analysis
-#**************************************
 
-#*************************
-#Prep data for analysis
+#IV. Merged mentor and mentee message traffic analysis
 
+
+# a. Merge and Prep Data for Analysis
+
+```{r, tidy=TRUE}
 #First merge the two dataframes
 message.traffic.merged <- merge(message.traffic.mentors, message.traffic.mentees, by = c("pair_id", "curriculum_sequence"), suffixes = c(".mentor", ".mentee"))
 
@@ -420,17 +424,20 @@ message.traffic.merged <- subset(message.traffic.merged, message.traffic.merged$
 #limit to valid response times (less than the length of the lesson and responses that occurred AFTER the mentee's initial message).
 message.traffic.merged.valid.resp <- subset(message.traffic.merged, message.traffic.merged$response.time < message.traffic.merged$lesson.length)
 message.traffic.merged.valid.resp <- subset(message.traffic.merged, message.traffic.merged$response.time <= 14400 & message.traffic.merged$response.time > 0)
+```
 
 
+# b. Ignore Rates
 
-#**************
-#ignore rates
-
+```{r, tidy=TRUE}
 #get the rate of non response by mentors overall.
 sum(message.traffic.merged$mentor.ignore.mentee.flag) / nrow(message.traffic.merged)
 
 #compare ignore rate by group
 ignore.rates.by.group.summ <- message.traffic.merged %>% group_by(combined.dropout.flag.mentor) %>% summarise(ignore.rate.by.group = mean(mentor.ignore.mentee.flag, na.rm = TRUE), count.obs = n())
+
+ignore.rates.by.group.summ
+
 tt <- pairwise.t.test(message.traffic.merged$mentor.ignore.mentee.flag, message.traffic.merged$combined.dropout.flag.mentor, p.adjust.method = "bonferroni")
 tt
 
@@ -472,17 +479,16 @@ legend(inset = c(.1, .7), "topright", legend=leg.txt, lty=c(1,1,1,1),
 par(new = TRUE)
 plot(x = ignore.rate.by.message.seq$x.for.line.chart, ignore.rate.by.message.seq$`ignore.rate.Formal closure`,
      main = "", xlab = "", ylab = "", type = "l", col = "navy", xlim = c(-33, 1), ylim = c(0, .4), axes = FALSE)
+```
 
-#Comment on ignore rate
-#Ignore rate is the first instance thus far where we have seen a statistically significant difference between mentor dropouts and formal closures.
-#Mentor dropouts do seem to have a statisticcally significantly higher ignore rate than formal closures.
-#All mentor groups appear to show an increasing ignore rate over time.
-#Note data points on this line graph of less than five messages have been removed to remove erratic and high ignore rates at the beginning of each series.
+###Comment on ignore rate
+
+Ignore rate is the first instance thus far where we have seen a statistically significant difference between mentor dropouts and formal closures. Mentor dropouts do seem to have a statisticcally significantly higher ignore rate than formal closures. All mentor groups appear to show an increasing ignore rate over time, yet anothe signal of declining mentor engagement. Note data points on this line graph of less than five messages have been removed to remove erratic and high ignore rates at the beginning of each series.
 
 
-#******************
-#Response times
+## c. Response times
 
+```{r, tidy=TRUE}
 #look at distribution of valid response times.
 #response time has a very interesting distribution. There are a lot of very timely responses and a lot of 'oh crap' response times where the mentor responded at the very end of the lesson.
 #Additionally, each day of the week seems to have its own normal distribution of response times.
@@ -495,6 +501,9 @@ response.time.hist.2 + geom_histogram(bins = 100) + ggtitle("Density Histogram o
 
 #Compare response time across groups
 response.time.by.group.summ <- message.traffic.merged.valid.resp %>% group_by(combined.dropout.flag.mentor) %>% summarise(mean.response.time = mean(response.time, na.rm = TRUE), count.obs = n())
+
+response.time.by.group.summ
+
 tt <- pairwise.t.test(message.traffic.merged.valid.resp$response.time, message.traffic.merged.valid.resp$combined.dropout.flag.mentor, p.adjust.method = "bonferroni")
 tt
 
@@ -541,3 +550,18 @@ legend(inset = c(.1, .1), "topright", legend=leg.txt, lty=c(1,1,1,1),
 par(new = TRUE)
 plot(x = response.time.by.message.seq$x.for.line.chart, response.time.by.message.seq$`mean.response.time.zscore.Formal closure`,
      main = "", xlab = "", ylab = "", type = "l", col = "navy", xlim = c(-33, 1), ylim = c(-.75, 1), axes = FALSE)
+```
+
+### Comment on Response Time
+
+Response time has a very interesting periodic distribution. We observe a lot of very timely responses and a lot of last minute responses times where the mentor responded at the very end of the lesson. In between these two extremes, there are peaks for response times at 24 hour intervals from the beginning of the week. We hoped to see mentors who drop out having relatively more last minute responses than mentors who do not drop out, but again, we did not observe any clear distinctions between message groups. Response time measured by message sequence seems relatively stable over time and does not seem to show an increasing or decreasing trend like some of the other metrics in our analysis.
+
+
+#V. Conclusion
+In conclusion, we repeatedly observe distinct time trends across various metrics that seem to signal declining mentor engagement over time. We do not observe any clear distinctions in the time trends for different mentor groups. We do observe some statistically significant distinctions across mentor groups on stationary metrics such as ignore rates, but these results have an unexpected direction that may warrant further investigation. Our main takeaway is that length of mentor involvement in the program appears to be the biggest driver of mentor message behavior.
+
+
+
+
+
+
